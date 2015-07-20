@@ -7,14 +7,13 @@ import android.graphics.Paint;
 import android.graphics.PorterDuff.Mode;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.RectF;
-import android.os.Handler;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.widget.ImageView;
 
 /**
  * 
- * 自定义的云存储加载动画定义
+ * 自定义的云存储加载动画定义，逆时针
  * <dl>
  * 开始loading需要调用{@link #startLoading()}启动动画
  * </dl>
@@ -25,7 +24,7 @@ import android.widget.ImageView;
  * @author Joey
  * 
  */
-public class LoadingView2 extends ImageView {
+public class LoadingViewCCW extends ImageView {
 
 	int width;
 	int height;
@@ -82,17 +81,17 @@ public class LoadingView2 extends ImageView {
 		}
 	};
 
-	public LoadingView2(Context context, AttributeSet attrs, int defStyleAttr) {
+	public LoadingViewCCW(Context context, AttributeSet attrs, int defStyleAttr) {
 		super(context, attrs, defStyleAttr);
 		init();
 	}
 
-	public LoadingView2(Context context, AttributeSet attrs) {
+	public LoadingViewCCW(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		init();
 	}
 
-	public LoadingView2(Context context) {
+	public LoadingViewCCW(Context context) {
 		super(context);
 		init();
 	}
@@ -100,12 +99,12 @@ public class LoadingView2 extends ImageView {
 	private void init() {
 		setBackgroundColor(Color.WHITE);
 		paint = new Paint();
-		paint.setColor(Color.RED);
+		paint.setColor(Color.WHITE);
 		paint.setAntiAlias(true);
-//		paint.setStrokeWidth(PAINT_STOKE_WIDTH);
+		paint.setStrokeWidth(PAINT_STOKE_WIDTH);
 		paint.setStrokeJoin(Paint.Join.ROUND);
 		paint.setStrokeCap(Paint.Cap.ROUND);
-		paint.setStyle(Paint.Style.FILL);
+		paint.setStyle(Paint.Style.FILL_AND_STROKE);
 	}
 
 	@Override
@@ -132,31 +131,29 @@ public class LoadingView2 extends ImageView {
 	 * @param canvas
 	 */
 	private void drawFrame(Canvas canvas) {
-//		if (topSweep > 0) {
+		if (leftSweep > 0) {
+			drawLeft(canvas);
+		} else if (drawingPart == PART_LEFT) {
+			drawingPart = PART_LINE;
+		}
+		if (lineStartX < lineMaxLength) {
+			drawLine(canvas);
+		} else if (drawingPart == PART_LINE) {
+			drawingPart = PART_RIGHT;
+		}
+		if (rightSweep > 0) {
+			drawRight(canvas);
+		} else if (drawingPart == PART_RIGHT) {
+			drawingPart = PART_TOP;
+		}
+		if (topSweep > 0) {
 			drawTop(canvas);
-		
-//		} else if (drawingPart == PART_TOP) {
-//			drawingPart = PART_RIGHT;
-//		}
-//		if (rightSweep > 0) {
-//			drawRight(canvas);
-//		} else if (drawingPart == PART_RIGHT) {
-//			drawingPart = PART_LINE;
-//		}
-//		if (lineStartX > width / 4 - DISTANCE) {
-//			drawLine(canvas);
-//		} else if (drawingPart == PART_LINE) {
-//			drawingPart = PART_LEFT;
-//		}
-//		
-//		if (leftSweep > 0) {
-//			drawLeft(canvas);
-//		} else if (drawingPart == PART_TOP) {
-//			waitCount++;
-//			if (waitCount > MAX_WAIT_COUNT) {
-//				resetFrameData();
-//			}
-//		}
+		} else if (drawingPart == PART_TOP) {
+			waitCount++;
+			if (waitCount > MAX_WAIT_COUNT) {
+				resetFrameData();
+			}
+		}
 		removeCallbacks(invalidateRunnable);
 		postDelayed(invalidateRunnable, DELAY_MILLIS);
 	}
@@ -179,11 +176,9 @@ public class LoadingView2 extends ImageView {
 	 * @param canvas
 	 */
 	private void drawLeft(Canvas canvas) {
-		paint.setStrokeWidth(1);
-
-		RectF rect = new RectF(- PAINT_STOKE_WIDTH / 2, height - width / 2 ,
-				width / 2, height);
-		canvas.drawArc(rect, -LEFT_START_ANGLE, -leftSweep, true, paint);
+		RectF rect = new RectF(0, height - width / 2 - PAINT_STOKE_WIDTH / 2,
+				width / 2, height - PAINT_STOKE_WIDTH / 2);
+		canvas.drawArc(rect, LEFT_START_ANGLE, leftSweep, true, paint);
 		if (drawingPart == PART_LEFT)
 			leftSweep -= OFFSET_ANGLE;
 	}
@@ -194,27 +189,24 @@ public class LoadingView2 extends ImageView {
 	 * @param canvas
 	 */
 	private void drawLine(Canvas canvas) {
-		paint.setStrokeWidth(PAINT_STOKE_WIDTH);
-
 		if (drawingPart == PART_LINE)
-			lineStartX -= DISTANCE;
-		canvas.drawLine(lineStartX, height ,
-				lineMaxLength, height , paint);
+			lineStartX += DISTANCE;
+		canvas.drawLine(lineStartX, height - PAINT_STOKE_WIDTH / 2,
+				lineMaxLength, height - PAINT_STOKE_WIDTH / 2, paint);
 
 	}
 
 	/**
-	 * 右测部分的动画
+	 * 右测不封的动画
 	 * 
 	 * @param canvas
 	 */
 	private void drawRight(Canvas canvas) {
-		paint.setStrokeWidth(1);
 		if (drawingPart == PART_RIGHT)
 			rightSweep -= OFFSET_ANGLE;
 		RectF rect = new RectF(width - height / 2, height / 2
-				, width, height );
-		canvas.drawArc(rect, -RIGHT_START_ANGLE, -rightSweep, true, paint);
+				- PAINT_STOKE_WIDTH / 2, width, height - PAINT_STOKE_WIDTH / 2);
+		canvas.drawArc(rect, RIGHT_START_ANGLE, rightSweep, true, paint);
 
 	}
 
@@ -224,12 +216,11 @@ public class LoadingView2 extends ImageView {
 	 * @param canvas
 	 */
 	private void drawTop(Canvas canvas) {
-		paint.setStrokeWidth(1);
 		if (drawingPart == PART_TOP)
 			topSweep -= OFFSET_ANGLE;
 		RectF rect = new RectF(width / 4, 0, width - height / 4, 3 * width / 4
-				- height / 4 + PAINT_STOKE_WIDTH/2);
-		canvas.drawArc(rect, 0 , -topSweep, true,
+				- height / 4);
+		canvas.drawArc(rect, TOP_START_ANGLE , topSweep, true,
 				paint);
 
 	}
@@ -241,9 +232,9 @@ public class LoadingView2 extends ImageView {
 		leftSweep = LEFT_MAX_SWEEP;
 		rightSweep = RIGHT_MAX_SWEEP;
 		topSweep = RIGHT_MAX_SWEEP;
+		lineStartX = width / 4 - DISTANCE;
 		lineMaxLength = width - height / 4 + DISTANCE;
-		lineStartX = lineMaxLength;
-		drawingPart = PART_TOP;
+		drawingPart = PART_LEFT;
 		waitCount = 0;
 	}
 
@@ -262,6 +253,8 @@ public class LoadingView2 extends ImageView {
 	public void startLoading() {
 		isAnimating = true;
 		resetFrameData();
+		removeCallbacks(invalidateRunnable);
+		postDelayed(invalidateRunnable, DELAY_MILLIS);
 
 	}
 }
