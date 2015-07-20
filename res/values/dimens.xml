@@ -3,5 +3,8 @@
     <!-- Default screen margins, per the Android Design guidelines. -->
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
+    <dimen name="cloud_text_min_size">12sp</dimen>
+    <dimen name="cloud_text_mid_size">18sp</dimen>
+    <dimen name="cloud_text_max_size">22sp</dimen>
 
 </resources>
