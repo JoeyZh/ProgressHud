@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_width="100dp"
+    android:layout_height="100dp"
     android:padding="15dp" >
 
     <TextView
@@ -10,7 +10,6 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
-        android:padding="10dp"
         android:singleLine="true"
         android:text="@string/app_name"
         android:textSize="@dimen/cloud_text_min_size" />
@@ -21,12 +20,13 @@
         android:layout_above="@+id/loadingText"
         android:layout_centerHorizontal="true" >
 
-        <com.example.progressloading.LoadingSurfaceView
+        <com.example.progressloading.LoadingSurfaceViewCW
             android:id="@+id/loadingView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
-            android:layout_centerHorizontal="true" />
+            android:layout_centerHorizontal="true" 
+            />
     </RelativeLayout>
 
 </RelativeLayout>

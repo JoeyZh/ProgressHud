@@ -1,38 +1,37 @@
 package com.example.progressloading;
 
+import com.example.progressloading.ProgressHub2.ProgressLayout;
+
+import android.app.Dialog;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.PixelFormat;
 import android.graphics.RectF;
+import android.os.Bundle;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.widget.ImageView;
+import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.LinearLayout.LayoutParams;
 
-/**
- * 
- * 自定义弹出的加载框，使用前需要先调用{@link #init(Context, int)},初始化
- * 
- * 
- * @author Joey
- * 
- */
-public class ProgressHub {
-
-	private static ProgressHub hub;
-	private Context context;
+public class JVProgressDialog extends Dialog{
+	
+	ProgressLayout layout ;
 
 	private WindowManager wm;
-	private ProgressLayout layout;
-	int width = 100;
-	int height = 100;
-
+	private final int WIDTH = 100;
+	private final int HEIGHT = 100;
+	int width = WIDTH;
+	int height = HEIGHT;
+	private Context context;
+	
 	private boolean isShowing = false;
 	/**
 	 * mark window style dark or light
@@ -41,27 +40,83 @@ public class ProgressHub {
 	public final static int STYLE_LIGHT = 1;
 
 	private int style;
-
-	private ProgressHub() {
+	
+	public JVProgressDialog(Context context, int theme) {
+		super(context, theme);
+		// TODO Auto-generated constructor stub
+		init(context,STYLE_LIGHT);
 
 	}
 
-	/**
-	 * 获取全局显示的对象
-	 * 
-	 * @return
-	 */
-	public static ProgressHub getInstance() {
-		if (hub != null) {
-			return hub;
-		}
-		synchronized (ProgressHub.class) {
-			if (hub != null)
-				return hub;
-			hub = new ProgressHub();
-			return hub;
-		}
+	protected JVProgressDialog(Context context, boolean cancelable,
+			OnCancelListener cancelListener) {
+		super(context, cancelable, cancelListener);
+		init(context,STYLE_LIGHT);
+
+		// TODO Auto-generated constructor stub
 	}
+	public JVProgressDialog(Context context) {
+		super(context,R.style.progress_dlg_style);
+		init(context,STYLE_LIGHT);
+		// TODO Auto-generated constructor stub
+	}
+
+	
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        // TODO Auto-generated method stub
+        super.onCreate(savedInstanceState);
+        layout = new ProgressLayout(context);
+        ViewGroup.LayoutParams params = new ViewGroup.LayoutParams(width,height);
+        layout.setLayoutParams(params);
+        setContentView(layout);
+
+    }
+
+    @Override
+    protected void onStart() {
+      
+     
+    }
+
+    @Override
+    protected void onStop() {
+       
+    }
+	
+    @Override
+	public void show() {
+		// TODO Auto-generated method stub
+		super.show();
+		layout.loadingView.startLoading();
+	}
+
+    
+    public void show(String msg)
+    {
+    	show();
+    	layout.loadingText.setText(msg);
+    }
+    public void show(int id)
+    {
+    	show();
+    	layout.loadingText.setText(id);
+    }
+	@Override
+	public void cancel() {
+		// TODO Auto-generated method stub
+		super.cancel();
+		layout.loadingView.stopLoading();
+
+	}
+
+	@Override
+	public void dismiss() {
+		// TODO Auto-generated method stub
+		super.dismiss();
+		layout.loadingView.stopLoading();
+	}
+
 
 	/**
 	 * 
@@ -81,8 +136,8 @@ public class ProgressHub {
 		wm.getDefaultDisplay().getMetrics(outMetrics);
 
 		float density = outMetrics.density;
-		width *= density;
-		height *= density;
+		width = (int)(WIDTH*density);
+		height = (int)(HEIGHT*density);
 
 		Log.i("ProgressHub",
 				String.format("width = %d,height= %d", width, height));
@@ -98,49 +153,6 @@ public class ProgressHub {
 		this.style = style;
 		if (layout != null)
 			layout.setStyle();
-	}
-
-	/**
-	 * 显示loading视图,
-	 * 
-	 * @param text
-	 *            要显示的文字
-	 */
-	public void show(String text) {
-		WindowManager.LayoutParams wmParams = new WindowManager.LayoutParams();
-		wmParams.type = WindowManager.LayoutParams.TYPE_PHONE  ; // type是关键，这里的2002表示系统级窗口，你也可以试试2003。
-		wmParams.format = 1;
-		wmParams.flags = 40;
-		wmParams.width = width;
-		wmParams.height = height;
-		wmParams.gravity = Gravity.CENTER;
-		if (layout == null) {
-			layout = new ProgressLayout(context);
-		}
-		if(text == null||text.equals(""))
-			text = context.getResources().getString(R.string.waiting);
-		layout.loadingText.setText(text);
-		if (isShowing) {
-			wm.updateViewLayout(layout, wmParams);
-		} else {
-			wm.addView(layout, wmParams);
-		}
-		layout.loadingView.startLoading();
-		isShowing = true;
-	}
-
-	/**
-	 * 加载完毕，关闭View显示
-	 */
-	public void dismiss() {
-		if (!isShowing)
-			return;
-		if(layout != null)
-			layout.loadingView.stopLoading();
-		if(wm != null)
-			wm.removeView(layout);
-		layout = null;
-		isShowing = false;
 	}
 
 	/**

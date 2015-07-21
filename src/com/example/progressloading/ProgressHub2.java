@@ -4,15 +4,21 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.PixelFormat;
 import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.FrameLayout;
+import android.widget.LinearLayout;
+import android.widget.PopupWindow;
 import android.widget.RelativeLayout;
+import android.widget.RelativeLayout.LayoutParams;
 import android.widget.TextView;
 
 /**
@@ -23,15 +29,19 @@ import android.widget.TextView;
  * @author Joey
  * 
  */
-public class ProgressHub {
+public class ProgressHub2 {
 
-	private static ProgressHub hub;
+	private static ProgressHub2 hub;
 	private Context context;
 
 	private WindowManager wm;
 	private ProgressLayout layout;
-	int width = 100;
-	int height = 100;
+	private final int WIDTH = 100;
+	private final int HEIGHT = 100;
+	int width = WIDTH;
+	int height = HEIGHT;
+	private PopupWindow popWin;
+	private ViewGroup parent;
 
 	private boolean isShowing = false;
 	/**
@@ -42,7 +52,7 @@ public class ProgressHub {
 
 	private int style;
 
-	private ProgressHub() {
+	private ProgressHub2() {
 
 	}
 
@@ -51,14 +61,14 @@ public class ProgressHub {
 	 * 
 	 * @return
 	 */
-	public static ProgressHub getInstance() {
+	public static ProgressHub2 getInstance() {
 		if (hub != null) {
 			return hub;
 		}
-		synchronized (ProgressHub.class) {
+		synchronized (ProgressHub2.class) {
 			if (hub != null)
 				return hub;
-			hub = new ProgressHub();
+			hub = new ProgressHub2();
 			return hub;
 		}
 	}
@@ -81,8 +91,8 @@ public class ProgressHub {
 		wm.getDefaultDisplay().getMetrics(outMetrics);
 
 		float density = outMetrics.density;
-		width *= density;
-		height *= density;
+		width = (int)(WIDTH*density);
+		height = (int)(HEIGHT*density);
 
 		Log.i("ProgressHub",
 				String.format("width = %d,height= %d", width, height));
@@ -106,27 +116,48 @@ public class ProgressHub {
 	 * @param text
 	 *            要显示的文字
 	 */
-	public void show(String text) {
-		WindowManager.LayoutParams wmParams = new WindowManager.LayoutParams();
-		wmParams.type = WindowManager.LayoutParams.TYPE_PHONE  ; // type是关键，这里的2002表示系统级窗口，你也可以试试2003。
-		wmParams.format = 1;
-		wmParams.flags = 40;
-		wmParams.width = width;
-		wmParams.height = height;
-		wmParams.gravity = Gravity.CENTER;
+	public void show(String text,ViewGroup root) {
+	
+		if(isShowing)
+			return;
+		if(root == null)
+			return;
+		parent = root;
 		if (layout == null) {
 			layout = new ProgressLayout(context);
 		}
+		if(parent instanceof LinearLayout)
+		{
+			LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(width, height);
+			params.gravity = Gravity.CENTER;
+			parent.addView(layout, params);
+		}
+		else if(parent instanceof FrameLayout)
+		{
+			FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(width,height);
+			params.gravity = Gravity.CENTER;
+			parent.addView(layout, params);
+		}
+		else if(parent instanceof RelativeLayout)
+		{
+			RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(width, height);
+			params.addRule(RelativeLayout.CENTER_IN_PARENT);
+			parent.addView(layout, params);
+		}
+		else
+		{
+			parent.addView(layout, width, height);
+		}
+		layout.clearAnimation();
+		layout.setVisibility(View.VISIBLE);
+		layout.startAnimation(AnimationUtils.loadAnimation(context, R.anim.pop_in));
 		if(text == null||text.equals(""))
 			text = context.getResources().getString(R.string.waiting);
 		layout.loadingText.setText(text);
-		if (isShowing) {
-			wm.updateViewLayout(layout, wmParams);
-		} else {
-			wm.addView(layout, wmParams);
-		}
+	
 		layout.loadingView.startLoading();
 		isShowing = true;
+		
 	}
 
 	/**
@@ -135,11 +166,14 @@ public class ProgressHub {
 	public void dismiss() {
 		if (!isShowing)
 			return;
-		if(layout != null)
-			layout.loadingView.stopLoading();
-		if(wm != null)
-			wm.removeView(layout);
+		if(layout == null)
+			return;
+		layout.loadingView.stopLoading();
+		layout.setVisibility(View.GONE);
+		if(parent != null)
+			parent.removeView(layout);
 		layout = null;
+
 		isShowing = false;
 	}
 
@@ -217,6 +251,7 @@ public class ProgressHub {
 			// TODO Auto-generated method stub
 			super.onDraw(canvas);
 			RectF rect = new RectF(SHADOW_DADIUS, SHADOW_DADIUS, width-SHADOW_DADIUS*2, height-SHADOW_DADIUS*2);
+//			Log.i("progressHub", "onDraw :"+ rect.toShortString());
 			canvas.drawRoundRect(rect, RX, RX, paint);
 		}
 		

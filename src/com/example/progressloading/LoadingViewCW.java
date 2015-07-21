@@ -104,6 +104,7 @@ public class LoadingViewCW extends ImageView {
 
 	private void init(Context context) {
 		this.context = context;
+		setImageResource(R.drawable.loadingbg);
 		Drawable drawable = context.getResources().getDrawable(R.drawable.loadingbg);
 		width = drawable.getIntrinsicWidth();
 		height = drawable.getIntrinsicHeight();

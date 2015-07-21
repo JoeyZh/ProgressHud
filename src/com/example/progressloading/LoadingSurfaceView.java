@@ -9,6 +9,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.AttributeSet;
@@ -97,6 +98,8 @@ public class LoadingSurfaceView extends SurfaceView implements
 				R.drawable.loadingbg);
 		sfh = getHolder();
 		sfh.addCallback(this);
+		setZOrderOnTop(true);
+		sfh.setFormat(PixelFormat.TRANSPARENT);
 		initPaint();
 		drawRunnable = new DrawLooper();
 		resetFrameData();
@@ -118,7 +121,7 @@ public class LoadingSurfaceView extends SurfaceView implements
 		if (paint == null)
 			initPaint();
 		paint.setColor(color);
-//		setBackgroundColor(color);
+		setBackgroundColor(color);
 	}
 
 	@Override
